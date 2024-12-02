@@ -1,0 +1,46 @@
+ ----Indian Driver Performance Category Check 
+SELECT 
+  ----date_trunc('Week', ag.event_date::date) AS week_start,
+  ag.city,
+  ag.driveruuid,
+  ag.drn,
+  MAX(dd.first_name) || ' ' || MAX(dd.last_name) AS "name",
+  avg(ag.supply_hours) AS supply_hours,
+  AVG(ag.acceptance_rate) * 100 AS acceptance_rate,
+  CASE 
+    -- Mumbai conditions
+    WHEN ag.city = 'Mumbai' AND avg(ag.supply_hours) > 50 AND AVG(ag.acceptance_rate) > 0.40 THEN 'Top performer'
+    WHEN ag.city = 'Mumbai' AND avg(ag.supply_hours) <= 50 AND AVG(ag.acceptance_rate) <= 0.40 THEN 'Bottom performer'
+    WHEN ag.city = 'Mumbai' AND avg(ag.supply_hours) > 50 AND AVG(ag.acceptance_rate) <= 0.40 THEN 'Cherry Picker'
+    WHEN ag.city = 'Mumbai' AND avg(ag.supply_hours) <= 50 AND AVG(ag.acceptance_rate) > 0.40 THEN 'Opportunity Loss'
+     
+    -- Hyderabad conditions
+    WHEN ag.city = 'Hyderabad' AND avg(ag.supply_hours) > 50 AND AVG(ag.acceptance_rate) > 0.60 THEN 'Top performer'
+    WHEN ag.city = 'Hyderabad' AND avg(ag.supply_hours) <= 50 AND AVG(ag.acceptance_rate) <= 0.60 THEN 'Bottom performer'
+    WHEN ag.city = 'Hyderabad' AND avg(ag.supply_hours) > 50 AND AVG(ag.acceptance_rate) <= 0.60 THEN 'Cherry Picker'
+    WHEN ag.city = 'Hyderabad' AND avg(ag.supply_hours) <= 50 AND AVG(ag.acceptance_rate) > 0.60 THEN 'Opportunity Loss'
+
+    -- Bangalore conditions
+    WHEN ag.city = 'Bangalore' AND avg(ag.supply_hours) > 60 AND AVG(ag.acceptance_rate) > 0.60 THEN 'Top performer'
+    WHEN ag.city = 'Bangalore' AND avg(ag.supply_hours) <= 60 AND AVG(ag.acceptance_rate) <= 0.60 THEN 'Bottom performer'
+    WHEN ag.city = 'Bangalore' AND avg(ag.supply_hours) > 60 AND AVG(ag.acceptance_rate) <= 0.60 THEN 'Cherry Picker'
+    WHEN ag.city = 'Bangalore' AND avg(ag.supply_hours) <= 60 AND AVG(ag.acceptance_rate) > 0.60 THEN 'Opportunity Loss'
+
+    -- Delhi conditions
+    WHEN ag.city = 'Delhi' AND avg(ag.supply_hours) > 65 AND AVG(ag.acceptance_rate) > 0.45 THEN 'Top performer'
+    WHEN ag.city = 'Delhi' AND avg(ag.supply_hours) <= 65 AND AVG(ag.acceptance_rate) <= 0.45 THEN 'Bottom performer'
+    WHEN ag.city = 'Delhi' AND avg(ag.supply_hours) > 65 AND AVG(ag.acceptance_rate) <= 0.45 THEN 'Cherry Picker'
+    WHEN ag.city = 'Delhi' AND avg(ag.supply_hours) <= 65 AND AVG(ag.acceptance_rate) > 0.45 THEN 'Opportunity Loss'
+     
+    ELSE 'Uncategorized'
+  END AS Category
+FROM 
+  partners_data_daily.vw_uber_driver_aggr ag
+LEFT JOIN dbt.core__driver_domain dd ON ag.drn = dd.drn
+WHERE 
+  ag.country = 'India'
+  and ag.driveruuid = '268b637c-468d-4109-9ea3-4a8c2305ba97'
+ AND date_trunc('Week', ag.event_date::date) >= '2024-09-02' and date_trunc('Week', ag.event_date::date) <='2024-09-30'
+GROUP BY 
+  ---date_trunc('Week', ag.event_date::date), 
+ ag.city, ag.driveruuid, ag.drn;
