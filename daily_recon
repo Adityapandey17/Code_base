@@ -1,0 +1,66 @@
+WITH uber_data AS (
+    SELECT 
+        source_file_date AS day,
+        driveruuid AS uber_id,
+        AVG(completionrate) AS completionrate,
+        AVG(acceptancerate) AS acceptancerate,
+        AVG(cancellationrate) AS cancellationrate
+    FROM 
+        partners_data_daily.mv_uber_harmonized_driver_quality
+    WHERE  
+        source_file_date BETWEEN '2024-11-17' AND '2024-12-02'
+        AND LOWER(country) = 'india'
+    GROUP BY 
+        source_file_date, driveruuid
+)
+SELECT 
+    dr.week,
+    dr.day,
+    dr.drn,
+    dr.uber_name,
+    dr.uber_id,
+    dr.product,
+    dr.vehicle_plate,
+    dr.vehicle_type,
+    dr.is_assigned,
+    dr.days_off,
+    dr.is_assigned_today,
+    dr.effective_days,
+    dr.trips,
+    dr.supply_hours,
+    dr.net_earning,
+    dr.cash_collected,
+    dr.refund_and_expenses,
+    dr.toll,
+    dr.tax_credit_from_uber,
+    dr.uber_balance,
+    dr.va_account,
+    dr.bank_statement,
+    dr.incentives,
+    dr.moove_balance,
+    dr.remittance,
+    dr.payouts,
+    dr.extra_charges,
+    dr.adjustment_amount,
+    dr.amount_due,
+    dr.outstanding,
+    dr.prev_outstanding,
+    dr.cum_outstanding,
+    dr.payables,
+    dr.city,
+    dr.driver_type,
+    ud.acceptancerate,
+    ud.cancellationrate,
+    ud.completionrate
+FROM 
+    recon_india.daily_reconciliation dr
+LEFT JOIN 
+    uber_data ud 
+ON 
+    dr.uber_id = ud.uber_id 
+    AND dr.day = ud.day
+WHERE 
+    dr.day BETWEEN '2024-11-17' AND '2024-12-02'
+ORDER BY 
+    dr.day DESC, 
+    dr.drn ASC;
