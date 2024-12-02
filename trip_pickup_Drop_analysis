@@ -1,0 +1,73 @@
+  WITH TripData AS (
+    SELECT 
+        account,
+        source_file_date,
+        driveruuid,
+        licenseplate,
+        REGEXP_SUBSTR(dropoffaddress, '\\d{6}') AS dropoff_postal_code,
+        REGEXP_SUBSTR(pickupaddress, '\\d{6}') AS pickup_postal_code
+    FROM 
+        partners_data_daily.mv_uber_harmonized_trip_activity
+    WHERE 
+        account LIKE 'BLR%' 
+        AND source_file_date >= '2024-01-01'
+        AND source_file_date <= '2024-10-29'
+),
+DropoffMax AS (
+    SELECT 
+        driveruuid,
+        dropoff_postal_code,
+        COUNT(dropoff_postal_code) AS dropoff_count
+    FROM 
+        TripData
+    GROUP BY 
+        driveruuid, dropoff_postal_code
+),
+PickupMax AS (
+    SELECT 
+        driveruuid,
+        pickup_postal_code,
+        COUNT(pickup_postal_code) AS pickup_count
+    FROM 
+        TripData
+    GROUP BY 
+        driveruuid, pickup_postal_code
+),
+DropoffMaxFinal AS (
+    SELECT 
+        driveruuid,
+        dropoff_postal_code AS max_dropoff_postal_code
+    FROM 
+        DropoffMax
+    WHERE 
+        (driveruuid, dropoff_count) IN (
+            SELECT driveruuid, MAX(dropoff_count)
+            FROM DropoffMax
+            GROUP BY driveruuid
+        )
+),
+PickupMaxFinal AS (
+    SELECT 
+        driveruuid,
+        pickup_postal_code AS max_pickup_postal_code
+    FROM 
+        PickupMax
+    WHERE 
+        (driveruuid, pickup_count) IN (
+            SELECT driveruuid, MAX(pickup_count)
+            FROM PickupMax
+            GROUP BY driveruuid
+        )
+)
+SELECT 
+    d.driveruuid,
+    d.max_dropoff_postal_code,
+    p.max_pickup_postal_code
+FROM 
+    DropoffMaxFinal d
+JOIN 
+    PickupMaxFinal p ON d.driveruuid = p.driveruuid
+ORDER BY 
+    d.driveruuid;
+
+
