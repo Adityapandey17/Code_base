@@ -1,0 +1,7 @@
+SELECT * 
+FROM mobility_payment_transactions_prod.aggregated_transactions
+WHERE country_code = 'IN' 
+---AND driver_number = 'MVIN00102'
+AND transaction_date >= '2024-08-11' 
+AND transaction_date <= '2024-10-08'
+ORDER BY transaction_date asc;
