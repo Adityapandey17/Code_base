@@ -1,0 +1,61 @@
+SELECT 
+    d.uuid,
+    m.month AS "YYYY/MM",
+    COALESCE(t.total_trip_count, 0) AS total_trips,
+    COALESCE(t.outstation_trip_count, 0) AS outstation_trip_count
+FROM 
+    (
+        SELECT DISTINCT driveruuid AS uuid 
+        FROM partners_data_daily.mv_uber_harmonized_trip_activity
+        WHERE account like 'BOM%' 
+          AND source_file_date BETWEEN '2022-07-18' AND '2024-11-03'
+    ) d
+CROSS JOIN 
+    (
+        SELECT '2022-07' AS month UNION ALL
+        SELECT '2022-08' UNION ALL
+        SELECT '2022-09' UNION ALL
+        SELECT '2022-10' UNION ALL
+        SELECT '2022-11' UNION ALL
+        SELECT '2022-12' UNION ALL
+        SELECT '2023-01' UNION ALL
+        SELECT '2023-02' UNION ALL
+        SELECT '2023-03' UNION ALL
+        SELECT '2023-04' UNION ALL
+        SELECT '2023-05' UNION ALL
+        SELECT '2023-06' UNION ALL
+        SELECT '2023-07' UNION ALL
+        SELECT '2023-08' UNION ALL
+        SELECT '2023-09' UNION ALL
+        SELECT '2023-10' UNION ALL
+        SELECT '2023-11' UNION ALL
+        SELECT '2023-12' UNION ALL
+        SELECT '2024-01' UNION ALL
+        SELECT '2024-02' UNION ALL
+        SELECT '2024-03' UNION ALL
+        SELECT '2024-04' UNION ALL
+        SELECT '2024-05' UNION ALL
+        SELECT '2024-06' UNION ALL
+        SELECT '2024-07' UNION ALL
+        SELECT '2024-08' UNION ALL
+        SELECT '2024-09' UNION ALL
+        SELECT '2024-10' UNION ALL
+        SELECT '2024-11'
+    ) m
+LEFT JOIN 
+    (
+        SELECT 
+            driveruuid AS uuid,
+            TO_CHAR(DATE_TRUNC('month', source_file_date), 'YYYY-MM') AS year_month,
+            COUNT(*) AS total_trip_count,
+            COUNT(CASE WHEN tripdistance >= 100 THEN 1 END) AS outstation_trip_count
+        FROM 
+            partners_data_daily.mv_uber_harmonized_trip_activity
+        WHERE 
+            country = 'india'
+            AND source_file_date BETWEEN '2022-07-18' AND '2024-11-03'
+        GROUP BY 
+            driveruuid, year_month
+    ) t ON t.uuid = d.uuid AND t.year_month = m.month
+ORDER BY 
+    d.uuid, m.month;
