@@ -1,0 +1,25 @@
+WITH LatestDay AS (
+    SELECT 
+        drn, 
+        MAX(day) AS max_day
+    FROM 
+        recon_india.daily_reconciliation
+    WHERE 
+        city = 'Mumbai'
+    GROUP BY 
+        drn
+) -- Closing parenthesis for the CTE
+SELECT 
+    dr.drn, 
+    ld.max_day, 
+    dr.cum_outstanding
+FROM 
+    LatestDay ld
+JOIN 
+    recon_india.daily_reconciliation dr
+    ON ld.drn = dr.drn
+    AND ld.max_day = dr.day
+WHERE 
+   dr.city = 'Mumbai'
+ORDER BY 
+    dr.drn;
