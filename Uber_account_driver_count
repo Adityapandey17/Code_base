@@ -1,0 +1,16 @@
+SELECT 
+    account,
+    COUNT(DISTINCT driveruuid) AS unique_driver_count
+FROM 
+    partners_data_daily.mv_uber_harmonized_driver_quality
+WHERE 
+    country = 'india'
+    AND account IN (
+        'BOM_3', 'HYD_4', 'BLR_2', 'DEL_1', 'BOM_5',
+        'DEL_2', 'HYD_3', 'BLR_1', 'HYD_5', 'BOM_2',
+        'BOM_1', 'HYD_2', 'HYD_1', 'BLR_3', 'HYD_6'
+    )
+GROUP BY 
+    account
+ORDER BY 
+    account;
